@@ -1,6 +1,3 @@
-$site-sans-serif: 'Helvetica';
-$site-serif: 'Times New Roman';
-
 @mixin text-smooth() {
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
@@ -48,59 +45,4 @@ $site-serif: 'Times New Roman';
 	border-top: $size solid transparent;
 	border-bottom: $size solid transparent; 
 	border-right:$size solid $color;
-}
-
-@mixin sans-serif()
-{
-	font-family: $site-sans-serif, "Helvetica Neue", Helvetica, Arial, sans-serif;
-	@include text-smooth;
-}
-
-@mixin serif()
-{
-	font-family: $site-serif, TimesNewRoman, "Times New Roman", Times, Baskerville, Georgia, serif;
-	@include text-smooth;
-}
-
-@mixin media-query($width) {
-	@media(max-width: $width) {
-		@content;
-	}
-}
-
-@mixin breakpoint($point) {
-  @if $point == desktop {
-    @media (max-width: 1600px) { @content; }
-  }
-  @else if $point == tablet {
-    @media (max-height: 920px) { @content; }
-  }
-  @else if $point == mobile {
-    @media (max-width: 650px)  { @content; }
-  }
-  @else if $point == retina {
-  	@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi){ @content; }
-  }
-}
-
-@mixin keyframes($name) {
-  @-webkit-keyframes #{$name} {
-    @content; 
-  }
-  @-moz-keyframes #{$name} {
-    @content;
-  }
-  @-ms-keyframes #{$name} {
-    @content;
-  }
-  @keyframes #{$name} {
-    @content;
-  } 
-}
-
-@mixin animation($string) {
-  -webkit-animation: #{$string};
-  -moz-animation: #{$string};
-  -o-animation: #{$string};
-  animation: #{$string};    
 }

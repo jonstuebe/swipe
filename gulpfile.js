@@ -1,62 +1,61 @@
 var gulp = require('gulp'),
 	notify = require('gulp-notify'),
+	minifyCSS = require('gulp-minify-css'),
 	changed = require('gulp-changed'),
-	compass = require('gulp-compass'),
-	uglify = require('gulp-uglify'),
-	concat = require('gulp-concat'),
-	gulpIgnore = require('gulp-ignore');
+	rename = require("gulp-rename"),
+	sourcemaps   = require('gulp-sourcemaps'),
+	autoprefixer = require('gulp-autoprefixer'),
+	sass = require('gulp-sass'),
+	bourbon = require('node-bourbon'),
+	neat = require('node-neat');
 
 var paths = {
-	scripts: 'assets/js/**/*.js',
-	styles: 'assets/sass/**/*.scss'
-},
-config = {
-	compass: {
-		css: 'assets/css',
-		sass: 'assets/sass',
-		image: 'assets/images'
+	scripts: './assets/js/**/*.js',
+	styles: './assets/sass/**/*.scss',
+	output: {
+		styles: './assets/css'
 	}
-};
+}
 
-gulp.task('scripts', function(){
-
-	gulp.src('assets/js/main.js')
-		.pipe(changed('assets/js/*.js'))
-		.pipe(uglify({
-			outSourceMap: true,
-
-		}))
-		.pipe(concat('main.min.js'))
-		.pipe(gulp.dest('assets/js/'))
-		.pipe( notify({ message: 'js minified' }) );
-
-	gulp.src(['assets/js/vendor/**/*.js','!./assets/js/vendor/modernizr-2.6.2.min.js','!./assets/js/vendor/jquery-1.11.0.min.js'])
-		.pipe(changed('assets/js/vendor/**/*.js'))
-		.pipe(uglify({
-			outSourceMap: true,
-
-		}))
-		.pipe(concat('plugins.min.js'))
-		.pipe(gulp.dest('assets/js/'))
-		.pipe( notify({ message: 'plugins minified' }) );
-
-});
-
-gulp.task('styles', function(){
+gulp.task('styles.prod', function(){
 
 	gulp.src(paths.styles)
-		.pipe(changed(config.compass.css, {extension: '.css'}))
-		.pipe(compass(config.compass))
-		.pipe(gulp.dest(config.compass.css))
-		.pipe( notify({ message: 'sass compiled' }) );
+    	.pipe(changed(paths.output.styles, { extension: '.css' }))
+    	.pipe(sass({
+    		includePaths: neat.includePaths
+        }))
+        .pipe(autoprefixer({
+            browsers: ['last 3 versions']
+        }))
+        .pipe(minifyCSS({
+        	keepSpecialComments: 0
+        }))
+        .pipe(rename({
+        	extname: '.min.css'
+        }))
+        .pipe(notify("production sass compiled"))
+        .pipe(gulp.dest(paths.output.styles));
 
 });
 
-gulp.task('watch', function(){
+gulp.task('styles', function()
+{
+    gulp.src(paths.styles)
+    	.pipe(changed(paths.output.styles, { extension: '.css' }))
+    	.pipe(sourcemaps.init())
+    	.pipe(sass({
+    		includePaths: neat.includePaths,
+    		sourceMap: true
+        }))
+        .pipe(sourcemaps.write('.'))
+        .pipe(notify("sass compiled"))
+        .pipe(gulp.dest(paths.output.styles));
+});
 
+gulp.task('watch', function()
+{
 	gulp.watch(paths.styles, ['styles']);
-	gulp.watch(paths.scripts, ['scripts']);
-
 });
 
-gulp.task('default', ['styles','watch']);
+gulp.task('default', ['styles', 'watch']);
+gulp.task('prod', ['styles.prod']);
