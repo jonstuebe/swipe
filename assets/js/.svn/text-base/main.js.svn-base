@@ -1,9 +1,0 @@
-require(['jquery'], function($){
-
-	jQuery(document).ready(function($) {
-		
-		// put code here		
-		
-	});
-
-});
