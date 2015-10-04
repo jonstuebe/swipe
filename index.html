@@ -7,22 +7,48 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title></title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-        <meta property="og:site_name" content=""/>
-        <meta property="og:type" content="website"/>
-        <meta property="og:image" content=""/>
+        <meta name="description" content="" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
-        <link rel="stylesheet" href="assets/css/screen.css">
-        <script src="assets/js/vendor/modernizr-2.6.2.min.js"></script>
+        <link rel="stylesheet" href="assets/css/screen.css" />
     </head>
     <body>
 
+        <div class="touch-area">
+            <div class="touch-area__item"></div>
+        </div>
+
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="assets/js/vendor/jquery-1.11.0.min.js"><\/script>')</script>
-        <script src="assets/js/plugins.js"></script>
-        <script src="assets/js/main.js"></script>
+        <script src="assets/js/app.js"></script>
+        <script>
+        /*touch = new Touch({
+            // el: document.getElementsByClassName('touch-area'),
+            el: $('.touch-area'),
+            type: 'horz'
+        });
+        touch.on('end', function(){
+            console.log('end');
+        });*/
+
+        $(function() {
+            window.$touch = $('.touch-area').touch();
+
+            window.endTouch = function(e){
+                console.log('end touch', e);
+            };
+
+            $touch.on('touch.end', endTouch);
+
+            /*$touch.on('touch.start', function(e){
+                console.log(e);
+            });
+
+            $touch.on('touch.move', function(e){
+                console.log(e);
+            });*/
+        });
+        </script>
 
     </body>
 </html>

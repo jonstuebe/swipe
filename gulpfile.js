@@ -8,7 +8,7 @@ var gulp = require('gulp'),
     sass = require('gulp-sass'),
     bourbon = require('node-bourbon'),
     neat = require('node-neat'),
-    // babel = require('gulp-babel'), // needed for react
+    babel = require('gulp-babel'), // needed for react
     concat = require('gulp-concat'),
     browserSync = require('browser-sync').create(),
     reload = browserSync.reload,
@@ -77,8 +77,8 @@ gulp.task('react', function () {
 gulp.task('watch', function()
 {
     gulp.watch(paths.styles, ['styles']);
-    // gulp.watch(paths.react, ['react']);
-    // gulp.watch(paths.react).on('change', browserSync.reload);
+    gulp.watch(paths.scripts, ['react']);
+    gulp.watch(paths.scripts).on('change', browserSync.reload);
 });
 
 gulp.task('browser-sync', function() {
