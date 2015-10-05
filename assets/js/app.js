@@ -79,14 +79,14 @@ var Touch = (function () {
 
 			switch (this._touchType) {
 				case 'horz':
-					if (this._opts.mouseDrag) {
+					if (e.type == 'mousedown') {
 						this._touchScreenX = e.screenX;
 					} else {
 						this._touchScreenX = e.touches[0].screenX;
 					}
 					break;
 				case 'vert':
-					if (this._opts.mouseDrag) {
+					if (e.type == 'mousedown') {
 						this._touchScreenY = e.screenY;
 					} else {
 						this._touchScreenY = e.touches[0].screenY;
@@ -105,12 +105,12 @@ var Touch = (function () {
 
 			var _delta;
 			if (this._touchType == 'horz') {
-				var _screenX = this._opts.mouseDrag ? e.screenX : e.changedTouches[0].screenX;
+				var _screenX = e.type == 'mousemove' ? e.screenX : e.changedTouches[0].screenX;
 				_delta = _screenX - this._touchScreenX;
 				e.start = this._touchScreenX;
 				e.cur = _screenX;
 			} else if (this._touchType == 'vert') {
-				var _screenY = this._opts.mouseDrag ? e.screenY : e.changedTouches[0].screenY;
+				var _screenY = e.type == 'mousemove' ? e.screenY : e.changedTouches[0].screenY;
 				_delta = _screenY - this._touchScreenY;
 				e.start = this._touchScreenY;
 				e.cur = _screenY;
@@ -134,7 +134,7 @@ var Touch = (function () {
 
 			if (this._touchType == 'horz') {
 
-				var _screenX = this._opts.mouseDrag ? e.screenX : e.changedTouches[0].screenX;
+				var _screenX = e.type == 'mouseup' ? e.screenX : e.changedTouches[0].screenX;
 
 				deltaX = Math.abs(_screenX - this._touchScreenX);
 				velocity = 0.8 * (1000 * deltaX / (1 + elapsedTime));
@@ -142,7 +142,7 @@ var Touch = (function () {
 				endPos = _screenX;
 			} else if (this._touchType == 'vert') {
 
-				var _screenY = this._opts.mouseDrag ? e.screenY : e.changedTouches[0].screenY;
+				var _screenY = e.type == 'mouseup' ? e.screenY : e.changedTouches[0].screenY;
 
 				deltaY = Math.abs(_screenY - this._touchScreenY);
 				velocity = 0.8 * (1000 * deltaY / (1 + elapsedTime));
