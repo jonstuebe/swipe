@@ -8,25 +8,38 @@ var Touch = (function () {
 	function Touch(opts) {
 		_classCallCheck(this, Touch);
 
-		if (opts.el.length == 1) {
-			if (typeof jQuery !== 'undefined' && opts.el instanceof jQuery) {
-				this._isjQuery = true;
-				this.$el = opts.el[0];
-			} else {
-				this.$el = opts.el[0];
-			}
+		this._touchType = opts.type ? opts.type : 'horz';
+		this._opts = opts;
+
+		for (var i = 0; i < opts.el.length; i++) {
+			this.addListeners.apply(this, [opts.el[i]]);
 		}
-
-		this._touchType = opts.el.type ? opts.el.type : 'horz';
-
-		this.$el.addEventListener('touchstart', this);
-		this.$el.addEventListener('touchmove', this);
-		this.$el.addEventListener('touchend', this);
-
-		this.opts = opts;
 	}
 
 	_createClass(Touch, [{
+		key: 'addListeners',
+		value: function addListeners() {
+
+			var _el = arguments[0];
+			_el.addEventListener('touchstart', this);
+			_el.addEventListener('touchmove', this);
+			_el.addEventListener('touchend', this);
+
+			if (this._opts.mouseDrag) {
+				_el.addEventListener('mousedown', this);
+				_el.addEventListener('mousemove', this);
+				_el.addEventListener('mouseup', this);
+			}
+		}
+	}, {
+		key: 'removeListener',
+		value: function removeListener() {
+
+			var _el = arguments[0];
+			var _type = arguments[1];
+			_el.removeEventListener(_type, this);
+		}
+	}, {
 		key: 'handleEvent',
 		value: function handleEvent(e) {
 			switch (e.type) {
@@ -40,32 +53,55 @@ var Touch = (function () {
 					this.handleTouchEnd.apply(this, [e]);
 					break;
 			}
+
+			if (this._opts.mouseDrag) {
+				switch (e.type) {
+					case 'mousedown':
+						this.handleTouchStart.apply(this, [e]);
+						break;
+					case 'mousemove':
+						this.handleTouchMove.apply(this, [e]);
+						break;
+					case 'mouseup':
+						this.handleTouchEnd.apply(this, [e]);
+						break;
+				}
+			}
 		}
 	}, {
 		key: 'handleTouchStart',
 		value: function handleTouchStart(e) {
-			if (e.touches.length !== 1) return;
+
+			if (!this._opts.mouseDrag && e.touches.length !== 1) return;
 
 			this._touching = true;
 			this._touchStartTime = new Date();
 
 			switch (this._touchType) {
 				case 'horz':
-					this._touchScreenX = e.touches[0].screenX;
+					if (this._opts.mouseDrag) {
+						this._touchScreenX = e.screenX;
+					} else {
+						this._touchScreenX = e.touches[0].screenX;
+					}
 					break;
 				case 'vert':
-					this._touchScreenY = e.touches[0].screenY;
+					if (this._opts.mouseDrag) {
+						this._touchScreenY = e.screenY;
+					} else {
+						this._touchScreenY = e.touches[0].screenY;
+					}
 					break;
 			}
 
-			if (typeof this.opts.onStart == 'function') this.opts.onStart.apply(this.$el, [e]);
+			if (typeof this._opts.onStart == 'function') this._opts.onStart.apply(this, [e]);
 		}
 	}, {
 		key: 'handleTouchMove',
 		value: function handleTouchMove(e) {
 
 			if (!this._touching) return;
-			if (typeof this.opts.onMove == 'function') this.opts.onMove.apply(this.$el, [e]);
+			if (typeof this._opts.onMove == 'function') this._opts.onMove.apply(this, [e]);
 		}
 	}, {
 		key: 'handleTouchEnd',
@@ -81,144 +117,51 @@ var Touch = (function () {
 
 			if (this._touchType == 'horz') {
 
-				deltaX = Math.abs(e.changedTouches[0].screenX - this._touchScreenX);
+				var _screenX = this._opts.mouseDrag ? e.screenX : e.changedTouches[0].screenX;
+
+				deltaX = Math.abs(_screenX - this._touchScreenX);
 				velocity = 0.8 * (1000 * deltaX / (1 + elapsedTime));
 				startPos = this._touchScreenX;
-				endPos = e.changedTouches[0].screenX;
+				endPos = _screenX;
 			} else if (this._touchType == 'vert') {
 
-				deltaY = Math.abs(e.changedTouches[0].screenY - this._touchScreenY);
+				var _screenY = this._opts.mouseDrag ? e.screenY : e.changedTouches[0].screenY;
+
+				deltaY = Math.abs(_screenY - this._touchScreenY);
 				velocity = 0.8 * (1000 * deltaY / (1 + elapsedTime));
 				startPos = this._touchScreenY;
-				endPos = e.changedTouches[0].screenY;
+				endPos = _screenY;
 			}
 
 			e.velocity = velocity;
 			e['start'] = startPos;
 			e['end'] = endPos;
 
-			if (typeof this.opts.onEnd == 'function') this.opts.onEnd.apply(this.$el, [e]);
+			if (typeof this._opts.onEnd == 'function') this._opts.onEnd.apply(this, [e]);
 		}
 	}, {
 		key: 'on',
 		value: function on(type, handler) {
-			if (type == 'start') this.opts.onStart = handler;
-			if (type == 'end') this.opts.onEnd = handler;
-			if (type == 'move') this.opts.onMove = handler;
+			if (type == 'start') this._opts.onStart = handler;
+			if (type == 'end') this._opts.onEnd = handler;
+			if (type == 'move') this._opts.onMove = handler;
 		}
 	}, {
 		key: 'off',
 		value: function off(type, handler) {
-			if (type == 'start' && this.opts.onStart == handler) this.$el.removeEventListener('touchstart', this);
-			if (type == 'end' && this.opts.onEnd == handler) this.$el.removeEventListener('touchend', this);
-			if (type == 'move' && this.opts.onMove == handler) this.$el.removeEventListener('touchmove', this);
+
+			for (var i = 0; i < this._opts.el.length; i++) {
+				if (type == 'start' && this._opts.onStart == handler) {
+					this.removeListener.apply(this, [this._opts.el[i], 'touchstart']);
+				} else if (type == 'end' && this._opts.onEnd == handler) {
+					this.removeListener.apply(this, [this._opts.el[i], 'touchend']);
+				} else if (type == 'move' && this._opts.onMove == handler) {
+					this.removeListener.apply(this, [this._opts.el[i], 'touchmove']);
+				}
+			}
 		}
 	}]);
 
 	return Touch;
 })();
-
-(function ($) {
-	// What does the touch plugin do?
-	var originalOn = $.fn.on;
-	$.fn.on = function () {
-
-		var ret;
-		if (arguments.length > 1 && arguments[0].substr(0, 6) == 'touch.') {
-			ret = $.fn.touch.on.apply(this, arguments);
-		} else {
-			ret = originalOn.apply(this, arguments);
-		}
-		return ret;
-	};
-
-	/*var originalOff = $.fn.off;
- $.fn.off = function(){
- 	var ret = originalOff.apply(this, arguments);
- 	console.log(ret);
- 	if(arguments.length > 1 && arguments[0].substr(arguments[0].length - 6, arguments[0].length) == '.touch')
- 	{
- 		this.trigger({
- 			type: 'removeListener.touch',
- 			args: arguments[1]
- 		});
- 
- 	}
- 	return ret;
- }*/
-
-	$.fn.touch = function (options) {
-
-		if (!this.length) {
-			return this;
-		}
-
-		var opts = $.extend(true, {}, $.fn.touch.defaults, options);
-
-		this.each(function () {
-			var $this = $(this);
-
-			/*if(opts.onEnd == null)
-   {
-   	opts.onEnd = function(e){
-   		$this.trigger({
-   			type: 'end.touch',
-   			velocity: e.velocity,
-   			start: e.start,
-   			end: e.end,
-   			touches: e.changedTouches
-   		});
-   	}
-   }
-    if(opts.onStart == null)
-   {
-   	opts.onStart = function(e){
-   		$this.trigger({
-   			type: 'start.touch',
-   			touches: e.touches
-   		});
-   	}
-   }
-    if(opts.onMove == null)
-   {
-   	opts.onMove = function(e){
-   		$this.trigger({
-   			type: 'move.touch',
-   			touches: e.changedTouches
-   		});
-   	}
-   }*/
-
-			var touch = new Touch({
-				el: $this,
-				type: opts.type,
-				onEnd: opts.onEnd,
-				onStart: opts.onStart,
-				onMove: opts.onMove
-			});
-
-			/*$this.on('removeListener.touch', function(e){
-   	if(e.args[0] == 'end.touch')
-   	{
-   		touch.off('end', opts.onEnd);
-   		opts.onEnd = null;
-   	}
-   });*/
-		});
-
-		return this;
-	};
-
-	$.fn.touch.on = function () {
-		console.log(this, arguments);
-	};
-
-	// default options
-	$.fn.touch.defaults = {
-		type: 'horz',
-		onEnd: null,
-		onStart: null,
-		onMove: null
-	};
-})(jQuery);
 //# sourceMappingURL=app.js.map

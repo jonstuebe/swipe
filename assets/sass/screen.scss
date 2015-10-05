@@ -4,3 +4,34 @@
 @import "neat";
 
 @import "mixins";
+
+.touch-area {
+	width: 50%;
+	height: 500px;
+	margin: 50px auto 0;
+	background-color: #ccc;
+	position: relative;
+
+	&:before {
+		content: "Swipe Here";
+		
+		position: absolute;
+		top: 50%;
+		left: 0;
+		transform: translateY(-50%);
+
+		width: 100%;
+
+		font-size: 20px;
+		font-weight: bold;
+		text-align: center;
+	}
+
+	&.is-active {
+		background-color: darken(#ccc, 10%);
+	}
+}
+
+.touch-area__item {
+
+}
