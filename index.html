@@ -15,36 +15,197 @@
     <body>
 
         <div class="touch-area">
-            <div class="touch-area__item"></div>
+            <div class="touch-area__scroll">
+                <div class="touch-area-item">
+                    <div class="touch-area-item__image">
+                        <img src="https://placeimg.com/1000/1000/any" alt="" />
+                    </div>
+                </div>
+                <div class="touch-area-item">
+                    <div class="touch-area-item__image">
+                        <img src="https://placeimg.com/1000/1000/nature" alt="" />
+                    </div>
+                </div>
+                <div class="touch-area-item">
+                    <div class="touch-area-item__image">
+                        <img src="https://placeimg.com/1000/1000/any" alt="" />
+                    </div>
+                </div>
+                <div class="touch-area-item">
+                    <div class="touch-area-item__image">
+                        <img src="https://placeimg.com/1000/1000/nature" alt="" />
+                    </div>
+                </div>
+                <div class="touch-area-item">
+                    <div class="touch-area-item__image">
+                        <img src="https://placeimg.com/1000/1000/arch" alt="" />
+                    </div>
+                </div>
+                <div class="touch-area-item">
+                    <div class="touch-area-item__image">
+                        <img src="https://placeimg.com/1000/1000/nature" alt="" />
+                    </div>
+                </div>
+                <div class="touch-area-item">
+                    <div class="touch-area-item__image">
+                        <img src="https://placeimg.com/1000/1000/any" alt="" />
+                    </div>
+                </div>
+                <div class="touch-area-item">
+                    <div class="touch-area-item__image">
+                        <img src="https://placeimg.com/1000/1000/arch" alt="" />
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="touch-area">
-            <div class="touch-area__item"></div>
-        </div>
 
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="assets/js/vendor/jquery-1.11.0.min.js"><\/script>')</script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/gsap/latest/plugins/CSSPlugin.min.js"></script>
         <script src="assets/js/app.js"></script>
         <script>
-        
+
+        var el = $('.touch-area');
+
         touch = new Touch({
-            el: document.getElementsByClassName('touch-area'),
-            // el: $('.touch-area'),
+            // el: document.getElementsByClassName('touch-area'),
+            el: el,
             type: 'horz',
-            mouseDrag: true
+            
+            // mouseDrag: true
+
+            /* 
+            currently this param takes over touch events
+            and only supports mouse events
+            */
         });
 
+        
+        var setScrollWidth = function(){
+            
+            var $scroll = el.find('.touch-area__scroll'),
+                $items = el.find('.touch-area-item');
+
+            $scroll.css('width', $items.length * ($items.find(':first').width() + 20));
+
+        }
+
+        setScrollWidth();
+
+        var curPos = 0;
+        var movePos = 0;
+        var animPos = 0;
+
+        var mass = .6,
+            force = 1.5,
+            velocityThreshold = 350,
+            touching = false,
+            animation;
+
+        var getTarget = function(target){
+            return ($(target).is(el)) ? $(target) : $(target).parents(el.selector);
+        }
+
         touch.on('start', function(e){
-            $(e.target).addClass('is-active');
+
+            if(!touching)
+            {
+                var _el = getTarget(e.target);
+                _el.addClass('is-active');
+                touching = true;
+            }
+            else
+            {
+                if(animation)
+                {
+                    var _el = getTarget(e.target);
+                    var bounds = _el.find('.touch-area__scroll').outerWidth();
+
+                    if((Math.abs(animPos) + window.innerWidth) < bounds)
+                    {
+                        _el.addClass('is-active');
+
+                        animation.kill();
+                        curPos = animPos;
+                        animPos = 0;
+                        touching = true;
+                    }
+                }
+            }
+
         });
 
         touch.on('move', function(e){
+            var _el = getTarget(e.target);
+            
+            var bounds = _el.find('.touch-area__scroll').outerWidth();
+            var pos = (curPos + (e.cur - e.start));
+
+            if(pos < 0)
+            {
+                if((Math.abs(pos) + window.innerWidth) < bounds)
+                {
+                    _el.find('.touch-area__scroll').css({
+                        left: pos + 'px'
+                    });
+                    movePos = pos;
+                }
+            }
+                
+            
         });
 
         touch.on('end', function(e){
-            $(e.target).removeClass('is-active');
-            console.log(e);
+            var _el = getTarget(e.target);
+            _el.removeClass('is-active');
+
+            // var _curPos = curPos + ( e.end - e.start );
+            
+            if(Math.abs(e.velocity) > velocityThreshold)
+            {
+                var momentum = (movePos < 0) ? (-1 * ( e.velocity * mass)) : (e.velocity * mass);
+                var pos = (e.end < e.start) ? (movePos + momentum) : (movePos - momentum);
+                var bounds = _el.find('.touch-area__scroll').outerWidth();
+                var over = false;
+                var speed = (Math.abs(force * momentum) / 1000);
+
+                if(Math.abs(pos) + window.innerWidth >= bounds)
+                {
+                    pos = (bounds - window.innerWidth) * -1;
+                    over = true;
+                }
+                else if(pos > 0)
+                {
+                    pos = 0;
+                    over = true;
+                }
+
+                if(over)
+                {
+                    speed = speed * .6;
+                }
+
+                animation = TweenLite.to(_el.find('.touch-area__scroll'), speed, {
+                  left: pos,
+                  ease: (over) ? Elastic.easeOut.config(1, 0.75) : Power2.easeOut,
+                  onComplete: function(){
+                    touching = false;
+                    curPos = pos;
+                  },
+                  onUpdate: function(){
+                    animPos = parseInt(this.target[0].style.left);
+                  }
+                });
+            }
+            else
+            {
+                curPos = movePos;
+            }
+
         });
+
 
         </script>
 

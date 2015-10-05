@@ -95,13 +95,30 @@ var Touch = (function () {
 			}
 
 			if (typeof this._opts.onStart == 'function') this._opts.onStart.apply(this, [e]);
+			e.preventDefault();
 		}
 	}, {
 		key: 'handleTouchMove',
 		value: function handleTouchMove(e) {
 
 			if (!this._touching) return;
+
+			var _delta;
+			if (this._touchType == 'horz') {
+				var _screenX = this._opts.mouseDrag ? e.screenX : e.changedTouches[0].screenX;
+				_delta = _screenX - this._touchScreenX;
+				e.start = this._touchScreenX;
+				e.cur = _screenX;
+			} else if (this._touchType == 'vert') {
+				var _screenY = this._opts.mouseDrag ? e.screenY : e.changedTouches[0].screenY;
+				_delta = _screenY - this._touchScreenY;
+				e.start = this._touchScreenY;
+				e.cur = _screenY;
+			}
+
+			e.delta = _delta;
 			if (typeof this._opts.onMove == 'function') this._opts.onMove.apply(this, [e]);
+			e.preventDefault();
 		}
 	}, {
 		key: 'handleTouchEnd',
@@ -134,10 +151,11 @@ var Touch = (function () {
 			}
 
 			e.velocity = velocity;
-			e['start'] = startPos;
-			e['end'] = endPos;
+			e.start = startPos;
+			e.end = endPos;
 
 			if (typeof this._opts.onEnd == 'function') this._opts.onEnd.apply(this, [e]);
+			e.preventDefault();
 		}
 	}, {
 		key: 'on',

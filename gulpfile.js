@@ -79,6 +79,7 @@ gulp.task('watch', function()
     gulp.watch(paths.styles, ['styles']);
     gulp.watch(paths.scripts, ['react']);
     gulp.watch(paths.scripts).on('change', browserSync.reload);
+    gulp.watch('./**/*.html').on('change', browserSync.reload);
 });
 
 gulp.task('browser-sync', function() {
